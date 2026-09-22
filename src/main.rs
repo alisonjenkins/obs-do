@@ -20,6 +20,10 @@ struct Args {
 enum Command {
     /// Start/Stop streaming
     ToggleStream,
+    /// Start streaming, if not already streaming.
+    StartStream,
+    /// Stop streaming, if currently streaming.
+    StopStream,
     /// Start/Stop recording
     ToggleRecord,
     /// Pause/Unpause recording
@@ -121,6 +125,26 @@ ERROR message:
                 .toggle()
                 .await
                 .context("toggle streaming")?;
+        }
+        Command::StartStream => {
+            let status = client
+                .streaming()
+                .status()
+                .await
+                .context("get streaming status")?;
+            if !status.active {
+                client.streaming().start().await.context("start streaming")?;
+            }
+        }
+        Command::StopStream => {
+            let status = client
+                .streaming()
+                .status()
+                .await
+                .context("get streaming status")?;
+            if status.active {
+                client.streaming().stop().await.context("stop streaming")?;
+            }
         }
         Command::ToggleRecord => {
             client
